@@ -1,0 +1,35 @@
+{
+  "client_name": "syskill",
+  "env": "local",
+  "routing": {
+    "active_source": "db_main",
+    "search_source": "search_main"
+  },
+  "sources": {
+    "db_main": {
+      "kind": "postgres",
+      "enabled": true,
+      "host": "localhost",
+      "port": 5432,
+      "database": "appdb",
+      "username_env": "DB_USER",
+      "password_env": "DB_PASSWORD",
+      "reflect": true,
+      "connect": {
+        "pool_pre_ping": true,
+        "pool_size": 10,
+        "max_overflow": 20
+      }
+    },
+    "search_main": {
+      "kind": "elasticsearch",
+      "enabled": true,
+      "hosts": ["http://localhost:9200"],
+      "connect": {
+        "request_timeout": 30,
+        "max_retries": 3,
+        "retry_on_timeout": true
+      }
+    }
+  }
+}

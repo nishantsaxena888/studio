@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "purchase_order": {
+      "storage": {
+        "source": "db_main",
+        "crud": "sql_row",
+        "table": "purchase_orders",
+        "pk": "id"
+      },
+      "read": {
+        "joins": [
+          { "type": "left", "table": "vendors", "alias": "v", "on": ["purchase_orders.vendor_id", "v.id"] }
+        ],
+        "fields": {
+          "id": "purchase_orders.id",
+          "po_number": "purchase_orders.po_number",
+          "status": "purchase_orders.status",
+          "vendor_name": "v.name",
+          "total_amount": "purchase_orders.total_amount"
+        },
+        "search": ["po_number", "vendor_name"]
+      },
+      "write": {
+        "mode": "default",
+        "allowed": ["po_number", "vendor_id", "status", "total_amount"]
+      },
+      "post_write": {
+        "policy": "best_effort",
+        "sinks": [
+          {
+            "kind": "es_index",
+            "name": "po_es",
+            "source": "search_main",
+            "index": "purchase_order_index",
+            "id_key": "id",
+            "fields": ["id", "po_number", "status", "vendor_name", "total_amount"]
+          }
+        ]
+      }
+    },
+    "po_with_totals": {
+      "storage": { "source": "db_main", "crud": "sql_row", "table": "purchase_orders", "pk": "id" },
+      "read": { "custom_query_id": "po_with_totals_v1" },
+      "write": { "mode": "disabled", "allowed": [] }
+    }
+  }
+}
