@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 APP_ROOT="$(cd "$(dirname "$0")" && pwd)"
-
 cd "$APP_ROOT"
 
-# activate venv
-source .venv/bin/activate
-
-# load env
+# load root env (ONLY CLIENT_NAME + optional ENV)
 set -a
-source .env
+[ -f ".env" ] && source ".env"
 set +a
 
-# kill existing uvicorn (if any)
-pkill -f "uvicorn app.main:app" || true
+if [[ -z "${CLIENT_NAME:-}" ]]; then
+  echo "❌ CLIENT_NAME not set in .env"
+  exit 1
+fi
 
-# start uvicorn
-exec uvicorn app.main:app \
-  --host 127.0.0.1 \
-  --port 8000 \
-  --reload
+CLIENT_START="$APP_ROOT/clients/$CLIENT_NAME/infra/start.sh"
+
+if [[ ! -f "$CLIENT_START" ]]; then
+  echo "❌ Client infra not generated for '$CLIENT_NAME'"
+  echo "👉 Run: python infra/setup.py"
+  exit 1
+fi
+
+exec "$CLIENT_START"

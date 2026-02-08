@@ -13,8 +13,25 @@ class PostgresSource(BaseSource):
         port = self.cfg.get("port", 5432)
         db = self.cfg["database"]
 
-        user = os.getenv(self.cfg.get("username_env", ""), "")
-        pwd  = os.getenv(self.cfg.get("password_env", ""), "")
+        # ✅ Support BOTH:
+        # - dev/local: inline username/password in cfg
+        # - prod/cloud: username_env/password_env pointing to env var names
+        if "username_env" in self.cfg and self.cfg["username_env"]:
+            user = os.getenv(self.cfg["username_env"], "")
+        else:
+            user = self.cfg.get("username", "")
+
+        if "password_env" in self.cfg and self.cfg["password_env"]:
+            pwd = os.getenv(self.cfg["password_env"], "")
+        else:
+            pwd = self.cfg.get("password", "")
+
+        # ✅ Fail fast (avoid silent blank creds)
+        if user == "" or pwd == "":
+            raise RuntimeError(
+                f"Postgres creds missing for source '{self.name}'. "
+                f"Provide username/password (dev) OR set env vars via username_env/password_env (prod)."
+            )
 
         dialect = self.cfg.get("dialect", "postgresql")
         driver  = self.cfg.get("driver", "psycopg")  # psycopg or psycopg2

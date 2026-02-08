@@ -1,22 +1,15 @@
 import json
-
-# register built-in sources
-import sources.connect.postgres  # noqa: F401
-import sources.connect.elasticsearch  # noqa: F401
-import sources.connect.s3  # noqa: F401
-import sources.connect.bigquery  # noqa: F401
-import sources.connect.firebase  # noqa: F401
-
-
-# register built-in sources
-import sources.connect.postgres  # noqa: F401
-import sources.connect.elasticsearch  # noqa: F401
-import sources.connect.s3  # noqa: F401
-import sources.connect.bigquery  # noqa: F401
-import sources.connect.firebase  # noqa: F401
-
 from typing import Any, Dict
+
+# register built-in sources (side-effect registration)
+import sources.connect.postgres  # noqa: F401
+import sources.connect.elasticsearch  # noqa: F401
+import sources.connect.s3  # noqa: F401
+import sources.connect.bigquery  # noqa: F401
+import sources.connect.firebase  # noqa: F401
+
 from sources.registry import SOURCE_REGISTRY
+
 
 class SourceManager:
     def __init__(self, config: Dict[str, Any]):
@@ -27,6 +20,10 @@ class SourceManager:
     def from_file(cls, path: str) -> "SourceManager":
         with open(path, "r") as f:
             return cls(json.load(f))
+
+    @classmethod
+    def from_dict(cls, config: Dict[str, Any]) -> "SourceManager":
+        return cls(config)
 
     def init_all(self) -> None:
         for name, cfg in self.config.get("sources", {}).items():
